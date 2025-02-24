@@ -1,0 +1,60 @@
+name: test ci
+
+on:
+  pull_request:
+
+jobs:
+  node-test:
+    strategy:
+      matrix:
+        os: ['ubuntu-latest']
+        node: [20.x]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: setup nodeJs ${{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: check format
+        run: pnpm run format
+
+      # MEMO: typed-css-modulesを使用している都合上必要
+      - name: build css types
+        run: pnpm run build:css
+
+      - name: lint test
+        run: pnpm run lint:js
+
+      - name: stylelint test
+        run: pnpm run lint:css
+
+      - name: typescript test
+        run: pnpm run ts:test
