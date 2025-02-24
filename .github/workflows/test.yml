@@ -46,15 +46,8 @@ jobs:
       - name: check format
         run: pnpm run format
 
-      # MEMO: typed-css-modulesを使用している都合上必要
-      - name: build css types
-        run: pnpm run build:css
-
       - name: lint test
-        run: pnpm run lint:js
-
-      - name: stylelint test
-        run: pnpm run lint:css
+        run: pnpm run lint
 
       - name: typescript test
         run: pnpm run ts:test
